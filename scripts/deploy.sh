@@ -4,6 +4,12 @@
 set -e
 #nos movemos a la raiz del proyecto
 cd ../
+if [ ! -f "README.md" ]; then
+  echo "No estás en la raíz del proyecto."
+  exit 1
+else
+  echo "Estamos en la raíz del proyecto."
+fi
 
 # Asegurarse de que se proporciona un entorno válido
 if [ -z "$1" ]; then
@@ -23,10 +29,10 @@ source .env
 
 # Definir el archivo de variables de entorno basado en el entorno proporcionado
 if [ "$ENVIRONMENT" == "dev" ]; then
-  TFVARS_FILE="Terraform/dev.tfvars"
+  TFVARS_FILE="Terraform/$ENVIRONMENT.tfvars"
   echo "Desplegando en entorno de desarrollo."
 elif [ "$ENVIRONMENT" == "prod" ]; then
-  TFVARS_FILE="Terraform/prod.tfvars"
+  TFVARS_FILE="Terraform/$ENVIRONMENT.tfvars"
   echo "Desplegando en entorno de producción."
 fi
 
@@ -47,18 +53,37 @@ gcloud config set project $PROJECT_ID
 REGION=$GCP_REGION
 gcloud config set compute/region $REGION
 
+REPOSITORY_NAME=$GCP_CR_REPOSITORY_NAME
+
+# Verificar si el repositorio ya existe
+REPO_EXISTS=$(gcloud artifacts repositories list --location=$GCP_REGION --filter=name="projects/$GCP_PROJECT_ID/locations/$GCP_REGION/repositories/$REPOSITORY_NAME" --format="value(name)"
+)
+
+# Si el repositorio no existe, crearlo
+if [ -z "$REPO_EXISTS" ]; then
+    echo "El repositorio no existe. Creando el repositorio $REPOSITORY_NAME en $REGION..."
+    gcloud artifacts repositories create $REPOSITORY_NAME \
+        --repository-format=docker \
+        --location=$REGION \
+        --description="Docker repository for challenge"
+    echo "Repositorio creado."
+else
+    echo "El repositorio $REPOSITORY_NAME ya existe en $REGION. No se hace nada."
+fi
+
+
 echo "Proyecto configurado en GCP: $PROJECT_ID"
 echo "Región configurada: $REGION"
+echo "Repository configurado: $REPOSITORY_NAME"
 
 # Construcción de la imagen Docker
-IMAGE_NAME="gcr.io/$PROJECT_ID/data-api:$ENVIRONMENT"
-
+IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY_NAME/data-api:$ENVIRONMENT"
 echo "Construyendo la imagen Docker para el entorno $ENVIRONMENT..."
 docker build -t $IMAGE_NAME ./src
 
 # Autenticación en Google Container Registry (GCR)
 echo "Autenticando en Google Container Registry..."
-gcloud auth configure-docker
+gcloud auth configure-docker "$REGION-docker.pkg.dev"
 
 # Subir la imagen Docker a GCR
 echo "Subiendo la imagen Docker a Google Container Registry (GCR)..."
@@ -68,8 +93,26 @@ echo "Imagen Docker subida a GCR: $IMAGE_NAME"
 
 # Reemplazar la variable de imagen en el archivo de variables (opcional)
 # Si quieres que el archivo tfvars incluya la imagen:
-echo "image = \"$IMAGE_NAME\"" >> $TFVARS_FILE
+# Verificar si la línea ya existe en el archivo
+if grep -q "image = \"$IMAGE_NAME\"" "$TFVARS_FILE"; then
+  echo "La línea de imagen ya existe en $TFVARS_FILE."
+else
+  echo "Añadiendo la línea de imagen al archivo."
+  echo "image = \"$IMAGE_NAME\"" >> "$TFVARS_FILE"
+fi
 
+# Crear bucket para el backend de terraform
+BUCKET_NAME="gs://$GCP_BUCKET_NAME"
+BUCKET_EXISTS=$(gsutil ls -b "$BUCKET_NAME")
+if [ "$BUCKET_EXISTS" = "$BUCKET_NAME/" ]; then
+  echo "El bucket $GCP_BUCKET_NAME ya existe."
+else
+	echo "no existe el bucket, creando el bucket $BUCKET_NAME"
+	gsutil mb -l $REGION $BUCKET_NAME
+fi
+
+#nos posicionamos en la carpeta de terraform
+cd Terraform/
 # Inicializar Terraform
 echo "Inicializando Terraform..."
 terraform init

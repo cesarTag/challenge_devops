@@ -1,8 +1,7 @@
 terraform {
-  required_version = ">= 0.15.9"
-  backend "s3" {
-    bucket = ""
-    key    = "state/terraform.tfstate"
-    region = "sa-east-1"
+  backend "gcs" {
+    bucket  = "terraform-bucket-challenge"
+    prefix  = "terraform/state"
+    credentials = "/Users/cesartag/Downloads/cuent_servicio_gcp/latam-challenge-devops-26284d5f8744.json"
   }
 }

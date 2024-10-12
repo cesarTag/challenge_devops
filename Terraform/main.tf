@@ -1,16 +1,6 @@
 provider "google" {
   project = var.project_id
   region  = var.region
-  credentials = file(env("GOOGLE_APPLICATION_CREDENTIALS"))
-
-  default_tags {
-    tags = {
-      environment = var.gcp_profile
-      owner       = "data"
-      author      = "cbustamante"
-      project     = "mixpanel-integration"
-    }
-  }
 }
 
 module "pubsub" {

@@ -1,15 +1,17 @@
 variable "project_id" {
-  description = "Google Cloud Project ID"
   type        = string
-  default     = env("GCP_PROJECT_ID")
+  description = "ID del proyecto de Google Cloud"
 }
 
 variable "region" {
   description = "Region where the resources will be created"
   type        = string
-  default     = env("GCP_REGION")
 }
 
 variable "gcp_profile" {
   default = "development"
+}
+
+variable "credentials_path" {
+  description = "The path to your Google Cloud service account credentials JSON file"
 }
