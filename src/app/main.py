@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from app.bigquery_handler import get_data_from_bigquery
+from bigquery_handler import get_data_from_bigquery
 
 app = Flask(__name__)
 

@@ -12,3 +12,8 @@ variable "region" {
   description = "The region for BigQuery"
   type        = string
 }
+
+variable "project_id" {
+  description = "Project name in gcp"
+  type        = string
+}

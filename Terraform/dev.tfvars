@@ -1,1 +1,6 @@
 image = "us-central1-docker.pkg.dev/latam-challenge-devops/challenge-docker-repo/data-api:dev"
+topic_name = "challenge_topic"
+dataset_id = "dataset_challenge"
+table_id = "table_challenge"
+subscription_name = "data_subscription"
+project_id = "latam-challenge-devops"

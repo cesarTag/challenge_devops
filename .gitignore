@@ -21,6 +21,7 @@ sdist/
 var/
 wheels/
 share/python-wheels/
+cuent_servicio_gcp/
 *.egg-info/
 .installed.cfg
 *.egg

@@ -5,5 +5,5 @@ output "pubsub_topic_id" {
 
 output "pubsub_subscription_id" {
   description = "The ID of the created Pub/Sub subscription"
-  value       = google_pubsub_subscription.subscription.id
+  value       = google_pubsub_subscription.bigquery_subscription.id
 }

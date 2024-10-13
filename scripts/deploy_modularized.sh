@@ -33,7 +33,7 @@ load_environment_variables() {
   source .env
 
   if [ "$ENVIRONMENT" == "dev" ]; then
-    TFVARS_FILE="Terraform/$ENVIRONMENT.tfvars"
+    TFVARS_FILE="$ENVIRONMENT.tfvars"
     echo "Desplegando en entorno de desarrollo."
   elif [ "$ENVIRONMENT" == "prod" ]; then
     TFVARS_FILE="Terraform/$ENVIRONMENT.tfvars"
@@ -109,7 +109,7 @@ handle_bucket() {
 run_terraform() {
   cd Terraform/
   echo "Inicializando Terraform..."
-  terraform init
+  terraform init -reconfigure
   echo "Validando Terraform..."
   terraform validate
   echo "Planificando el despliegue..."
@@ -127,6 +127,7 @@ authenticate_gcp
 #build_and_push_docker_image
 #update_tfvars_file
 handle_bucket
+echo $GOOGLE_APPLICATION_CREDENTIALS
 run_terraform
 
 echo "Despliegue completado exitosamente."
