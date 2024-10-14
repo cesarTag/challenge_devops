@@ -71,7 +71,8 @@ solo comentar cómo funciona.**
 **- Para el punto 1.4 no se requiere un diagrama profesional ni que siga ningún estándar de
 diagramas en específico.**
 
-###Arquitectura Propuesta para el Flujo de Datos
+### Arquitectura Propuesta para el Flujo de Datos
+
 **Usuario/API → Cloud Run (API Docker) → Tópico de Pub/Sub:**
 
 La API que se ejecuta en Cloud Run recibe una petición para publicar datos en el tópico de Pub/Sub.
