@@ -21,6 +21,9 @@ sdist/
 var/
 wheels/
 share/python-wheels/
+/Users/cesartag/PycharmProjects/challenge_devops/src/app/cuent_servicio_gcp/
+.Terraform/
+.terraform/
 *.egg-info/
 .installed.cfg
 *.egg
