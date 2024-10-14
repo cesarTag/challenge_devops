@@ -1,164 +1,121 @@
-# Terraform GCP Infrastructure
-
-Este proyecto utiliza Terraform para implementar una infraestructura en Google Cloud Platform (GCP) que incluye los siguientes componentes:
-
-- **Google Pub/Sub**: Para la ingesta de datos en un sistema de mensajería en tiempo real.
-- **BigQuery**: Para el almacenamiento analítico de los datos ingeridos.
-- **Cloud Run** (comentado en este archivo, pero potencialmente disponible para ejecutar aplicaciones en contenedores).
-
-## Prerrequisitos
-
-1. **Cuenta de servicio de GCP**: Necesitas una cuenta de servicio de GCP con permisos para gestionar los recursos de Pub/Sub, BigQuery y Cloud Run (si se va a usar).
-2. **Archivo de credenciales**: El archivo de credenciales de la cuenta de servicio debe estar accesible en tu máquina. En este ejemplo, se encuentra en `/Users/cesartag/Downloads/cuent_servicio_gcp/latam-challenge-devops-26284d5f8744.json`.
-3. **Terraform**: Asegúrate de tener Terraform instalado en tu sistema. [Instrucciones de instalación](https://learn.hashicorp.com/tutorials/terraform/install-cli).
-
-## Variables
-
-Este archivo de Terraform utiliza variables para facilitar la personalización. Asegúrate de definir las siguientes variables en tu archivo `terraform.tfvars` o mediante otro mecanismo (p. ej., variables de entorno o archivo de variables específicas).
-
-- `project_id`: ID del proyecto de GCP.
-- `region`: Región en la que se implementarán los recursos.
-- `topic_name`: Nombre del tema de Pub/Sub.
-- `subscription_name`: Nombre de la suscripción de Pub/Sub.
-- `dataset_id`: ID del dataset de BigQuery.
-- `table_id`: ID de la tabla de BigQuery.
-- `image`: (Opcional) URL de la imagen de contenedor para ejecutar en Cloud Run (si es que se habilita este servicio).
-
-### Ejemplo de archivo `terraform.tfvars`
-
-Puedes definir las variables de tu proyecto en un archivo `terraform.tfvars` o exportarlas como variables de entorno para que Terraform las utilice. A continuación se muestra un ejemplo:
-
-```hcl
-project_id        = "my-gcp-project-id"
-region            = "us-central1"
-credentials_path  = "/Users/tu_usuario/path/al/archivo/credenciales.json"
-dataset_id        = "mi_dataset"
-table_id          = "mi_tabla"
-topic_name        = "mi_topic"
-subscription_name = "mi_suscripcion"
-image             = "gcr.io/my-gcp-project-id/my-docker-image"
+# Challenge DevSecOps/SRE
+​
+## Descripción General
+En Advanced Analytics se construyen productos de datos que al ser consumidos añaden valor a diferentes áreas de nuestra aerolínea. Los servicios exhiben datos obtenidos por procesos de analítica mediante APIs, tablas y procesos recurrentes. Uno de los principales pilares de nuestra cultura es la resiliencia y calidad de lo que construimos. Esto nos permite preservar la correcta operación de nuestros servicios y no deteriorar el valor añadido hacia el resto de áreas.​
+## Instrucciones de entrega:
+1. Enviar un POST request tipo JSON al endpoint: https://advana-challenge-check-api-cr-k4hdbggvoq-uc.a.run.app/devops con tu nombre, mail y repositorio git:
+2. Se aceptarán cambios en el repositorio hasta el día especificado en el e-mail junto a este desafío.
+```json
+    {
+      "name": "Pedro Picapiedra",
+      "mail": "Pedro.picapiedra@example.com",
+      "github_url": "https://github.com/ppicapiedra/latam-challenge.git"
+    }
 ```
 
+3. El plazo máximo de entrega del challenge son **4 días corridos completos** a partir de la recepción del challenge.
+   Por ejemplo: Si recibiste el challenge el día jueves 21 de Septiembre a las 3 pm, tienes plazo hasta el martes 26 de septiembre a las 23:59.
+Siguiendo la logica del correo, en este caso el plazo maximo seria el lunes 14 de Octubre a las 23:59, ya que fue recibido el miercoles.
 
-## Gestión del Estado de Terraform
+## Instrucciones previas
+1) Utiliza un repositorio público de git para resolver el desafío (GitHub, BitBucket, GitLab, etc).
+2) Utiliza una rama master y otra develop al resolver el problema. Opcionalmente, utilizar alguna práctica de desarrollo de GitFlow.
+3) En el repositorio deben estar todos los archivos utilizados para la resolución del desafío.
+4) Ten en cuenta que nuestro lenguaje preferido es Python. De todas formas, usa el que más te acomode.
+5) Escribe un README.md para responder cada punto del desafío. Escribe supuestos y cualquier comentario que nos ayude a entender tu solución y tu forma de resolver el problema.
+6) Utiliza cualquier buena práctica que consideres en el repositorio, código o flujo de desarrollo para demostrar tu conocimiento.
+7) No necesitas resolver por completo ni a la perfección el desafío, pero te recomendamos detallar claramente en el .md cómo mejorar cada parte de tu ejercicio en caso de que tenga opción de mejora o no te haya dado el tiempo para resolverlo como te hubiese gustado. Lo importante es demostrar tus conocimientos.
 
-Este proyecto utiliza Google Cloud Storage (GCS) como backend remoto para gestionar el estado de Terraform. Esto permite almacenar el estado de forma segura y colaborativa en la nube, lo que es especialmente útil cuando varios usuarios trabajan en la misma infraestructura.
+​
+## Desafío Técnico DevSecOps/SRE
+### Contexto
+Se requiere un sistema para ingestar y almacenar datos en una DB con la finalidad de hacer analítica avanzada. Posteriormente, los datos almacenados deben ser expuestos mediante una API HTTP para que puedan ser consumidos por terceros.
+### Objetivo
+Desarrollar un sistema en la nube para ingestar, almacenar y exponer datos mediante el uso de IaC y despliegue con flujos CI/CD. Hacer pruebas de calidad, monitoreo y alertas para asegurar y monitorear la salud del sistema.
+Tu desafío debe tener al menos 6 archivos python en la carpeta `src`. Cada uno de estos archivos correspondiente a la función del mismo nombre, con el mismo formato que se indica en las instrucciones de más abajo. Solo deja la función. Además de eso, debes tener un archivo `.ipynb` donde expliques con mayor claridad tu código. En este jupyter notebook puedes ejecutar tus funciones, medir el tiempo de ejecución, memoria en uso y explayarte según estimes conveniente. Te recomendamos fuertemente que utilices celdas markdown para que expliques el paso a paso de tu código.
 
-### Configuración del Backend
+**Parte 1:Infraestructura e IaC**
+1. Identificar la infraestructura necesaria para ingestar, almacenar y exponer datos:
+a. Utilizar el esquema Pub/Sub (no confundir con servicio Pub/Sub de Google)
+para ingesta de datos
+b. Base de datos para el almacenamiento enfocado en analítica de datos
+c. Endpoint HTTP para servir parte de los datos almacenados
+2. (Opcional) Deployar infraestructura mediante Terraform de la manera que más te acomode.
+   Incluir código fuente Terraform.
+   No requiere pipeline CI/CD.
+   
+**Comentarios:**
 
-En el archivo `backend.tf` se especifica el uso de un bucket en GCS para almacenar el estado de Terraform:
+**- La estructura de datos no es relevante para el problema, asume cualquiera.**
 
-```hcl
-terraform {
-  backend "gcs" {
-    bucket      = "terraform-bucket-challenge"
-    prefix      = "terraform/state"
-    credentials = "/ruta/a/tu/archivo/credenciales.json"
-  }
-}
-```
-### Explicación de los parámetros:
-**bucket:** Nombre del bucket de GCS donde se almacenará el estado remoto.
+**- Existen múltiples formas de resolver el problema y escoger la infraestructura, recomendamos
+simplicidad.**
 
-**prefix:** Carpeta dentro del bucket donde se almacenará el archivo de estado.
 
-**credentials:** Ruta al archivo de credenciales de GCP que Terraform utilizará para acceder al bucket de GCS.
+**Parte 2: Aplicaciones y flujo CI/CD**
+1. API HTTP: Levantar un endpoint HTTP con lógica que lea datos de base de datos y los exponga al recibir una petición GET
+2. Deployar API HTTP en la nube mediante CI/CD a tu elección. Flujo CI/CD y ejecuciones deben estar visibles en el repositorio git.
+3. (Opcional) Ingesta: Agregar suscripción al sistema Pub/Sub con lógica para ingresar los datos recibidos a la base de datos. El objetivo es que los mensajes recibidos en un tópico se guarden en la base de datos. No requiere CI/CD.
+4. Incluye un diagrama de arquitectura con la infraestructura del punto 1.1 y su interacción con los servicios/aplicaciones que demuestra el proceso end-to-end de ingesta hasta el consumo por la API HTTP
 
-###Beneficios del Backend Remoto
-**Colaboración:** Permite que múltiples miembros del equipo trabajen en la misma infraestructura compartiendo el estado.
+**Comentarios:**
 
-**Persistencia:** El estado de Terraform se almacena de forma segura y no depende del entorno local.
+**- Recomendamos usar un servicio serverless mediante Dockerfile para optimizar el tiempo de
+desarrollo y deployment para la API HTTP.**
 
-**Bloqueo de Estado:** GCS soporta el bloqueo de estado para evitar que varios usuarios realicen cambios simultáneos en la infraestructura, previniendo posibles errores de concurrencia.
+**- Es posible que lógica de ingesta se incluya nativamente por tu servicio en la nube. De ser así,
+solo comentar cómo funciona.**
 
-## Estructura del Módulo
+**- Al ser 1.3 opcional, el flujo de ingesta de datos quedará incompleto, está bien.**
 
-### Provider
+**- Para el punto 1.4 no se requiere un diagrama profesional ni que siga ningún estándar de
+diagramas en específico.**
 
-El proveedor de Google se configura utilizando las credenciales de la cuenta de servicio y el proyecto proporcionado. Ejemplo:
+###Arquitectura Propuesta para el Flujo de Datos
+**Usuario/API → Cloud Run (API Docker) → Tópico de Pub/Sub:**
 
-```hcl
-provider "google" {
-  project     = var.project_id
-  region      = var.region
-  credentials = "/ruta/a/tu/archivo/credenciales.json"
-}
-```
+La API que se ejecuta en Cloud Run recibe una petición para publicar datos en el tópico de Pub/Sub.
 
-### Módulo Pub/Sub
-Este módulo configura un tema y una suscripción de Pub/Sub en el proyecto de GCP especificado. Está diseñado para depender de la existencia de una tabla en BigQuery (definida en el módulo BigQuery).
-```hcl
-module "pubsub" {
-  source            = "./modules/pubsub"
-  topic_name        = var.topic_name
-  subscription_name = var.subscription_name
-  project_id        = var.project_id
+**Tópico de Pub/Sub → Suscripción de Pub/Sub → BigQuery:**
 
-  depends_on = [
-    module.bigquery.bigquery_table
-  ]
-}
-```
+La suscripción extrae los mensajes del tópico y los carga automáticamente en un conjunto de datos y tabla de BigQuery.
 
-### Módulo BigQuery
-Este módulo configura un dataset y una tabla en BigQuery en el proyecto de GCP. Se especifican el dataset_id y el table_id que se deben crear o utilizar.
-```hcl
-module "bigquery" {
-  source     = "./modules/bigquery"
-  project_id = var.project_id
-  dataset_id = var.dataset_id
-  table_id   = var.table_id
-  region     = var.region
-}
-```
+**Usuario/API → Cloud Run (API Docker) → BigQuery:**
 
-### Módulo Cloud Run (comentado)
-Este módulo está comentado en el archivo actual, pero se puede habilitar para implementar un servicio en Cloud Run basado en una imagen de contenedor específica. Asegúrate de definir la variable image si deseas habilitar este servicio.
-```hcl
-module "cloudrun" {
-  source     = "./modules/cloudrun"
-  image      = var.image
-  region     = var.region
-  project_id = var.project_id
-}
-```
+La API también ofrece un endpoint para recuperar y exponer los datos almacenados en BigQuery.
 
-### Outputs
-El archivo outputs.tf está preparado para devolver la URL del servicio de Cloud Run.
-```hcl
-module "cloudrun" {
-  source     = "./modules/cloudrun"
-  image      = var.image
-  region     = var.region
-  project_id = var.project_id
-}
-```
-### Descripción de la salida:
-**cloud_run_url:** Si se despliega el servicio en Cloud Run, esta salida devuelve la URL del servicio, permitiendo acceder fácilmente a la aplicación desplegada.
+**CI/CD:**
 
-### Cómo utilizar este archivo Terraform
+El código fuente está almacenado en GitHub, y GitHub Actions gestiona automáticamente la compilación y el despliegue de la imagen Docker a Cloud Run, con la infraestructura aprovisionada mediante Terraform.
 
-1. Clona el repositorio y navega a la carpeta del proyecto.
+![Diagrama de produccion y consumo de datos](/images/Diagrama.png)
 
-2. Asegúrate de tener el archivo de credenciales adecuado y las variables definidas en un archivo terraform.tfvars o exportadas como variables de entorno.
 
-3. Inicializa el entorno de Terraform:
-````bash
-terraform init
-````
-4. Revisa el plan de ejecución:
-````bash
-terraform plan
-````
-5. Aplica los cambios para desplegar la infraestructura:
-````bash
-terraform apply
-````
 
-### Notas adicionales
-- El archivo de credenciales debe ser protegido adecuadamente. 
-- No incluyas este archivo en ningún repositorio público.
-- Asegúrate de tener las APIs necesarias habilitadas en GCP, como la API de Pub/Sub, BigQuery y Cloud Run (si aplica).
+**Parte 3: Pruebas de Integración y Puntos Críticos de Calidad**
+1. Implementa en el flujo CI/CD en test de integración que verifique que la API efectivamente está exponiendo los datos de la base de datos. Argumenta.
+2. Proponer otras pruebas de integración que validen que el sistema está funcionando correctamente y cómo se implementarían.
+3. Identificar posibles puntos críticos del sistema (a nivel de fallo o performance) diferentes al punto anterior y proponer formas de testearlos o medirlos (no implementar)
+4. Proponer cómo robustecer técnicamente el sistema para compensar o solucionar dichos puntos críticos.
 
-###Licencia
-Este proyecto está licenciado bajo los términos de MIT License.
+**Comentarios:**
+**Los test de integración no necesariamente deben cubrir todos los casos de uso.**
+
+
+**Parte 4: Métricas y Monitoreo**
+1. Proponer 3 métricas (además de las básicas CPU/RAM/DISK USAGE) críticas para entender la salud y rendimiento del sistema end-to-end
+2. Proponer una herramienta de visualización y describe textualmente qué métricas mostraría, y cómo esta información nos permitiría entender la salud del sistema para tomar decisiones estratégicas
+3. Describe a grandes rasgos cómo sería la implementación de esta herramienta en la nube y cómo esta recolectaría las métricas del sistema
+4. Describe cómo cambiará la visualización si escalamos la solución a 50 sistemas similares y qué otras métricas o formas de visualización nos permite desbloquear este escalamiento.
+5. Comenta qué dificultades o limitaciones podrían surgir a nivel de observabilidad de los sistemas de no abordarse correctamente el problema de escalabilidad
+
+**Comentarios:**
+**No se requiere implementación**
+
+**Parte 5: Alertas y SRE (Opcional)**
+1. Define específicamente qué reglas o umbrales utilizarías para las métricas propuestas, de manera que se disparan alertas al equipo al decaer la performance del sistema. Argumenta.
+2. Define métricas SLIs para los servicios del sistema y un SLO para cada uno de los SLIs. Argumenta por qué escogiste esos SLIs/SLOs y por qué desechaste otras métricas para utilizarlas dentro de la definición de SLIs.
+**Comentarios:**
+**No se requiere implementación**
+
+
