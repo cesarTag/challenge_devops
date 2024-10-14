@@ -1,190 +1,164 @@
-# CI/CD Pipelines
+# Terraform GCP Infrastructure
 
-Este proyecto utiliza ``github actions`` para implementar practica de Integracion y Despliegue Continuo (CI/CD).
+Este proyecto utiliza Terraform para implementar una infraestructura en Google Cloud Platform (GCP) que incluye los siguientes componentes:
 
-###1. Archivo para CI (Integración Continua)
-    .github/workflows/ci.yml
+- **Google Pub/Sub**: Para la ingesta de datos en un sistema de mensajería en tiempo real.
+- **BigQuery**: Para el almacenamiento analítico de los datos ingeridos.
+- **Cloud Run** (comentado en este archivo, pero potencialmente disponible para ejecutar aplicaciones en contenedores).
 
-Este archivo se encargará de la parte de integración continua, donde se verifica la calidad del código, se ejecutan las pruebas unitarias, y se asegura que el código esté listo para el despliegue.
-```yml
-name: CI Pipeline
+## Prerrequisitos
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+1. **Cuenta de servicio de GCP**: Necesitas una cuenta de servicio de GCP con permisos para gestionar los recursos de Pub/Sub, BigQuery y Cloud Run (si se va a usar).
+2. **Archivo de credenciales**: El archivo de credenciales de la cuenta de servicio debe estar accesible en tu máquina. En este ejemplo, se encuentra en `/Users/cesartag/Downloads/cuent_servicio_gcp/latam-challenge-devops-26284d5f8744.json`.
+3. **Terraform**: Asegúrate de tener Terraform instalado en tu sistema. [Instrucciones de instalación](https://learn.hashicorp.com/tutorials/terraform/install-cli).
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+## Variables
 
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+Este archivo de Terraform utiliza variables para facilitar la personalización. Asegúrate de definir las siguientes variables en tu archivo `terraform.tfvars` o mediante otro mecanismo (p. ej., variables de entorno o archivo de variables específicas).
 
-    - name: Set up Python environment
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+- `project_id`: ID del proyecto de GCP.
+- `region`: Región en la que se implementarán los recursos.
+- `topic_name`: Nombre del tema de Pub/Sub.
+- `subscription_name`: Nombre de la suscripción de Pub/Sub.
+- `dataset_id`: ID del dataset de BigQuery.
+- `table_id`: ID de la tabla de BigQuery.
+- `image`: (Opcional) URL de la imagen de contenedor para ejecutar en Cloud Run (si es que se habilita este servicio).
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+### Ejemplo de archivo `terraform.tfvars`
 
-    - name: Lint Code
-      run: |
-        pip install flake8
-        flake8 .
+Puedes definir las variables de tu proyecto en un archivo `terraform.tfvars` o exportarlas como variables de entorno para que Terraform las utilice. A continuación se muestra un ejemplo:
 
-    - name: Run Unit Tests
-      run: |
-        pip install pytest
-        pytest
-
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test-results/
-
-    - name: Verify Terraform Formatting
-      run: |
-        terraform fmt -check
-
-    - name: Initialize and Validate Terraform
-      run: |
-        terraform init -backend=false
-        terraform validate
-
-```
-###**Explicación:**
-
-**Eventos:** El pipeline se ejecuta cuando hay un push a la rama main o cuando se crea un pull_request.
-
-**Checkout del código:** El código se descarga utilizando actions/checkout.
-
-**Configuración de Python:** Se establece un entorno Python para la ejecución de pruebas unitarias y la instalación de dependencias.
-
-**Linting:** Se asegura la calidad del código usando flake8.
-
-**Pruebas Unitarias:** Se ejecutan pruebas utilizando pytest.
-
-**Terraform:** Se verifica el formato y la validación de los archivos de Terraform sin ejecutar ningún cambio de infraestructura.
-
-
-###2. Archivo para CD (Despliegue Continuo): 
-    .github/workflows/cd.yml
-Este archivo está diseñado para realizar el despliegue continuo en GCP utilizando Docker, Terraform y otros recursos de GCP.
-```yml
-name: CD Pipeline
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Set up Google Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Configure Docker to use gcloud as a credential helper
-      run: |
-        gcloud auth configure-docker "${{ secrets.GCP_REGION }}-docker.pkg.dev"
-
-    - name: Build Docker image
-      run: |
-        IMAGE_NAME="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_CR_REPOSITORY_NAME }}/data-api:latest"
-        docker build -t $IMAGE_NAME ./src
-        docker push $IMAGE_NAME
-
-    - name: Update Terraform .tfvars file with Docker image
-      run: |
-        echo 'image = "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_CR_REPOSITORY_NAME }}/data-api:latest"' >> Terraform/prod.tfvars
-
-    - name: Initialize Terraform
-      run: |
-        cd Terraform
-        terraform init
-
-    - name: Apply Terraform Changes
-      run: |
-        terraform apply -var-file="prod.tfvars" -auto-approve
-
+```hcl
+project_id        = "my-gcp-project-id"
+region            = "us-central1"
+credentials_path  = "/Users/tu_usuario/path/al/archivo/credenciales.json"
+dataset_id        = "mi_dataset"
+table_id          = "mi_tabla"
+topic_name        = "mi_topic"
+subscription_name = "mi_suscripcion"
+image             = "gcr.io/my-gcp-project-id/my-docker-image"
 ```
 
-###**Explicación:**
 
-**Eventos:** El pipeline se activa al hacer push en la rama main (por ejemplo, después de pasar la integración continua).
+## Gestión del Estado de Terraform
 
-**Checkout del código:** Se descarga el código utilizando actions/checkout.
+Este proyecto utiliza Google Cloud Storage (GCS) como backend remoto para gestionar el estado de Terraform. Esto permite almacenar el estado de forma segura y colaborativa en la nube, lo que es especialmente útil cuando varios usuarios trabajan en la misma infraestructura.
 
-**Autenticación en Google Cloud:** Utiliza el plugin de GitHub Actions para autenticarse en Google Cloud con las credenciales del proyecto y la cuenta de servicio almacenadas en los secrets.
+### Configuración del Backend
 
-**Configuración de Docker:** Prepara Docker para la compilación de la imagen y la autenticación en Artifact Registry.
+En el archivo `backend.tf` se especifica el uso de un bucket en GCS para almacenar el estado de Terraform:
 
-**Construcción y publicación de Docker:** La imagen Docker se construye a partir del código fuente en ./src y se sube a Artifact Registry de GCP.
+```hcl
+terraform {
+  backend "gcs" {
+    bucket      = "terraform-bucket-challenge"
+    prefix      = "terraform/state"
+    credentials = "/ruta/a/tu/archivo/credenciales.json"
+  }
+}
+```
+### Explicación de los parámetros:
+**bucket:** Nombre del bucket de GCS donde se almacenará el estado remoto.
 
-**Actualización de Terraform:** El archivo .tfvars se actualiza automáticamente con la imagen Docker recién generada.
+**prefix:** Carpeta dentro del bucket donde se almacenará el archivo de estado.
 
-**Terraform Init y Apply:** Se ejecuta Terraform para desplegar la infraestructura y servicios en Google Cloud.
+**credentials:** Ruta al archivo de credenciales de GCP que Terraform utilizará para acceder al bucket de GCS.
 
+###Beneficios del Backend Remoto
+**Colaboración:** Permite que múltiples miembros del equipo trabajen en la misma infraestructura compartiendo el estado.
 
-###Prácticas Implementadas:
-**Separación de CI y CD:** El proceso de integración continua y despliegue continuo está claramente separado para evitar que fallos de construcción o pruebas afecten el despliegue.
+**Persistencia:** El estado de Terraform se almacena de forma segura y no depende del entorno local.
 
-**Modularidad:** Cada tarea está dividida en pequeños pasos manejables, desde la autenticación hasta la construcción y despliegue de recursos.
+**Bloqueo de Estado:** GCS soporta el bloqueo de estado para evitar que varios usuarios realicen cambios simultáneos en la infraestructura, previniendo posibles errores de concurrencia.
 
-**Reutilización de secretos:** Los secretos como GCP_PROJECT_ID, GCP_SA_KEY, GCP_REGION, GCP_CR_REPOSITORY_NAME se almacenan en GitHub Actions Secrets, evitando exponer credenciales en el código.
+## Estructura del Módulo
 
-**Validaciones de Terraform en CI:** La configuración de Terraform se valida antes de aplicar los cambios en CD, evitando posibles fallos en el despliegue.
+### Provider
 
-**Automatización de la actualización de .tfvars:** La actualización de la imagen en el archivo .tfvars se realiza automáticamente en el flujo de CD, asegurando que el despliegue use siempre la última imagen.
+El proveedor de Google se configura utilizando las credenciales de la cuenta de servicio y el proyecto proporcionado. Ejemplo:
 
-###Requerimientos Previos:
-**GitHub Secrets Configurados:** Se deben configurar los siguientes secrets en GitHub para que funcione la autenticación y el despliegue:
+```hcl
+provider "google" {
+  project     = var.project_id
+  region      = var.region
+  credentials = "/ruta/a/tu/archivo/credenciales.json"
+}
+```
 
-**GCP_PROJECT_ID:** ID del proyecto de Google Cloud.
+### Módulo Pub/Sub
+Este módulo configura un tema y una suscripción de Pub/Sub en el proyecto de GCP especificado. Está diseñado para depender de la existencia de una tabla en BigQuery (definida en el módulo BigQuery).
+```hcl
+module "pubsub" {
+  source            = "./modules/pubsub"
+  topic_name        = var.topic_name
+  subscription_name = var.subscription_name
+  project_id        = var.project_id
 
-**GCP_SA_KEY:** Clave de la cuenta de servicio de GCP en formato JSON.
+  depends_on = [
+    module.bigquery.bigquery_table
+  ]
+}
+```
 
-**GCP_REGION:** Región de GCP donde se realizará el despliegue.
+### Módulo BigQuery
+Este módulo configura un dataset y una tabla en BigQuery en el proyecto de GCP. Se especifican el dataset_id y el table_id que se deben crear o utilizar.
+```hcl
+module "bigquery" {
+  source     = "./modules/bigquery"
+  project_id = var.project_id
+  dataset_id = var.dataset_id
+  table_id   = var.table_id
+  region     = var.region
+}
+```
 
-**GCP_CR_REPOSITORY_NAME:** Nombre del repositorio de Artifact Registry donde se subirá la imagen Docker.
+### Módulo Cloud Run (comentado)
+Este módulo está comentado en el archivo actual, pero se puede habilitar para implementar un servicio en Cloud Run basado en una imagen de contenedor específica. Asegúrate de definir la variable image si deseas habilitar este servicio.
+```hcl
+module "cloudrun" {
+  source     = "./modules/cloudrun"
+  image      = var.image
+  region     = var.region
+  project_id = var.project_id
+}
+```
 
-### Descripción de los Archivos:
+### Outputs
+El archivo outputs.tf está preparado para devolver la URL del servicio de Cloud Run.
+```hcl
+module "cloudrun" {
+  source     = "./modules/cloudrun"
+  image      = var.image
+  region     = var.region
+  project_id = var.project_id
+}
+```
+### Descripción de la salida:
+**cloud_run_url:** Si se despliega el servicio en Cloud Run, esta salida devuelve la URL del servicio, permitiendo acceder fácilmente a la aplicación desplegada.
 
-- **`ci.yml`**: Encargado de la Integración Continua. Verifica la calidad del código y valida la infraestructura con Terraform.
-- **`cd.yml`**: Maneja el proceso de Despliegue Continuo. Construye y despliega la imagen Docker, actualiza la infraestructura usando Terraform, y ejecuta los cambios en Google Cloud.
+### Cómo utilizar este archivo Terraform
 
-### Ejecutando CI/CD
+1. Clona el repositorio y navega a la carpeta del proyecto.
 
-1. Cada vez que se realiza un `push` o un `pull request` a la rama `main`, el pipeline de CI se ejecutará automáticamente para validar los cambios.
-2. Cuando se realiza un `push` a la rama `main`, el pipeline de CD se encargará de desplegar los cambios en el entorno de producción usando los recursos de Google Cloud.
+2. Asegúrate de tener el archivo de credenciales adecuado y las variables definidas en un archivo terraform.tfvars o exportadas como variables de entorno.
 
-### Notas
+3. Inicializa el entorno de Terraform:
+````bash
+terraform init
+````
+4. Revisa el plan de ejecución:
+````bash
+terraform plan
+````
+5. Aplica los cambios para desplegar la infraestructura:
+````bash
+terraform apply
+````
 
-- Asegúrate de que las herramientas necesarias como `Docker`, `Terraform`, y `Google Cloud SDK` estén instaladas correctamente en tu entorno local para hacer pruebas manuales.
-- El pipeline de CD actualiza automáticamente el archivo `.tfvars` con la última versión de la imagen Docker generada para asegurar que los despliegues siempre usen la última imagen.
+### Notas adicionales
+- El archivo de credenciales debe ser protegido adecuadamente. 
+- No incluyas este archivo en ningún repositorio público.
+- Asegúrate de tener las APIs necesarias habilitadas en GCP, como la API de Pub/Sub, BigQuery y Cloud Run (si aplica).
 
-## Licencia
-
-Este proyecto está licenciado bajo los términos de [MIT License](LICENSE).
+###Licencia
+Este proyecto está licenciado bajo los términos de MIT License.
