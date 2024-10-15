@@ -20,3 +20,10 @@ resource "google_project_iam_member" "run_bigquery_access" {
   role    = "roles/bigquery.dataViewer"
   member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
+
+resource "google_cloud_run_service_iam_member" "invoker" {
+  service    = google_cloud_run_service.service.name
+  location   = google_cloud_run_service.service.location
+  role       = "roles/run.invoker"
+  member     = "allUsers"  # Permite acceso público
+}
