@@ -1,0 +1,27 @@
+digraph "Arquitectura con Pub/Sub, BigQuery y Cloud Run" {
+	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="Arquitectura con Pub/Sub, BigQuery y Cloud Run" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	subgraph "cluster_CI/CD" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="CI/CD" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"908b71df15084941a2675a130b4d1c5e" [label=GitHub height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/onprem/vcs/github.png" shape=none]
+		"3f6838d69bc6466e85f891f42596fdc5" [label="GitHub Actions" height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/onprem/ci/github-actions.png" shape=none]
+	}
+	subgraph cluster_Infraestructura {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Infraestructura labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"181d1bf160414d49b63fdf2826a1388a" [label=Terraform height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/onprem/iac/terraform.png" shape=none]
+		cb5e6e9d43514104ac9855ce7da306d0 [label="Cloud Run" height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/gcp/compute/run.png" shape=none]
+		f7f9fd63ee6a4e8f9b23fce6f12e9819 [label="Pub/Sub Topic" height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/gcp/analytics/pubsub.png" shape=none]
+		b37ef12a69c1408e8bcd9d92488f6cdc [label="Pub/Sub Subscription" height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/gcp/analytics/pubsub.png" shape=none]
+		"590f810252354003a60dd6bbcdd99a92" [label="BigQuery Dataset" height=1.9 image="/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/resources/gcp/analytics/bigquery.png" shape=none]
+	}
+	"908b71df15084941a2675a130b4d1c5e" -> "3f6838d69bc6466e85f891f42596fdc5" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"3f6838d69bc6466e85f891f42596fdc5" -> cb5e6e9d43514104ac9855ce7da306d0 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"181d1bf160414d49b63fdf2826a1388a" -> f7f9fd63ee6a4e8f9b23fce6f12e9819 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"181d1bf160414d49b63fdf2826a1388a" -> b37ef12a69c1408e8bcd9d92488f6cdc [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"181d1bf160414d49b63fdf2826a1388a" -> "590f810252354003a60dd6bbcdd99a92" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"181d1bf160414d49b63fdf2826a1388a" -> cb5e6e9d43514104ac9855ce7da306d0 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	cb5e6e9d43514104ac9855ce7da306d0 -> f7f9fd63ee6a4e8f9b23fce6f12e9819 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	b37ef12a69c1408e8bcd9d92488f6cdc -> "590f810252354003a60dd6bbcdd99a92" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	cb5e6e9d43514104ac9855ce7da306d0 -> "590f810252354003a60dd6bbcdd99a92" [label="Consulta de Datos" color=blue dir=back fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+}

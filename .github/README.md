@@ -102,6 +102,50 @@ El código fuente está almacenado en GitHub, y GitHub Actions gestiona automát
 **Comentarios:**
 **Los test de integración no necesariamente deben cubrir todos los casos de uso.**
 
+**1. Implementa en el flujo CI/CD un test de integración que verifique que la API efectivamente está exponiendo los datos de la base de datos. Argumenta.**
+
+En el flujo CI/CD actual, una prueba clave de integración es verificar que la API despliega correctamente los datos almacenados en la base de datos. Esto es fundamental, ya que garantiza que la aplicación está cumpliendo su propósito principal: servir datos de forma accesible y correcta.
+
+Implementación de prueba de integración:
+
+La prueba debería consistir en ejecutar solicitudes a los endpoints de la API después de desplegar la aplicación en un entorno temporal o de desarrollo.
+Se puede usar herramientas como pytest o Postman junto con newman para automatizar las pruebas de API.
+El flujo CI/CD se puede integrar con servicios de testing como pytest ejecutando un script que haga peticiones HTTP GET y verifique las respuestas contra datos conocidos en la base de datos.
+
+**2. Proponer otras pruebas de integración que validen que el sistema está funcionando correctamente y cómo se implementarían.**
+
+Además de la prueba de exposición de datos de la API, otras pruebas de integración podrían incluir:
+
+Prueba de autenticación y autorización: Verificar que el sistema de autenticación y los permisos de acceso a la API están funcionando correctamente. Esto podría incluir pruebas para asegurarse de que los usuarios no autenticados no puedan acceder a datos protegidos.
+
+Prueba de inserción de datos: Asegurarse de que la API permite realizar inserciones en la base de datos de manera correcta. 
+
+Prueba de consistencia de la base de datos: Validar que, después de realizar operaciones en la API (como POST, PUT o DELETE), la base de datos mantiene la consistencia de los datos. Esto implica realizar una operación y luego verificar que la base de datos refleja el cambio esperado.
+
+**3. Identificar posibles puntos críticos del sistema (a nivel de fallo o performance) diferentes al punto anterior y proponer formas de testearlos o medirlos.**
+
+Algunos puntos críticos que podrían ser un problema en el sistema:
+
+Latencia y rendimiento de la API: En producción, la API podría experimentar problemas de rendimiento debido a la carga o la complejidad de las consultas a la base de datos.
+
+Cómo medirlo: Utilizar herramientas como Locust o Apache JMeter para realizar pruebas de carga y medir la latencia de las respuestas. De esta manera, podrías simular múltiples usuarios accediendo a la API y medir cómo afecta el rendimiento.
+Test de estrés: Medir cómo se comporta el sistema bajo una carga extrema y observar en qué punto la API empieza a fallar o degradar su rendimiento.
+Escalabilidad del servicio: Dependiendo de la cantidad de datos o tráfico, la escalabilidad de la API puede convertirse en un problema.
+
+Cómo medirlo: Simular un aumento progresivo de tráfico utilizando herramientas de pruebas de carga. Observar en qué momento los tiempos de respuesta se vuelven inaceptables o cuándo comienzan a ocurrir fallos.
+Errores en la interacción con servicios externos (e.g., Google Cloud Storage): Si el sistema depende de servicios externos como Google Cloud, los errores en la conectividad o problemas de red pueden causar fallos en la aplicación.
+
+Cómo medirlo: Implementar pruebas que simulen fallos en la conexión con servicios externos. Usar mocking en las pruebas para simular respuestas de error del servicio de Google Cloud y observar cómo responde la aplicación.
+
+**4. Proponer cómo robustecer técnicamente el sistema para compensar o solucionar dichos puntos críticos.**
+
+Uso de caché: Para reducir la carga en la base de datos y mejorar la latencia, podrías implementar un sistema de caché (como Redis o Memcached) para almacenar temporalmente las respuestas de la API más solicitadas.
+
+Autoescalado: Configurar el autoescalado en Google Cloud Run o Kubernetes (si el sistema lo permite) para garantizar que la API puede manejar incrementos en la carga. Esto ayudaría a prevenir tiempos de inactividad en momentos de alto tráfico.
+
+Monitoreo y alertas: Implementar un sistema de monitoreo (como Prometheus + Grafana o Stackdriver) que te permita observar métricas clave del rendimiento de la API (tiempos de respuesta, uso de CPU, uso de memoria) y configurar alertas para detectar problemas antes de que afecten a los usuarios.
+
+Implementación de Circuit Breaker: En caso de dependencias con servicios externos, un patrón de "circuit breaker" puede ayudar a que la API degrade su servicio de manera controlada en lugar de fallar completamente cuando un servicio externo no esté disponible.
 
 **Parte 4: Métricas y Monitoreo**
 1. Proponer 3 métricas (además de las básicas CPU/RAM/DISK USAGE) críticas para entender la salud y rendimiento del sistema end-to-end

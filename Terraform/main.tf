@@ -1,7 +1,7 @@
 provider "google" {
   project = var.project_id
   region  = var.region
-  credentials = "/Users/cesartag/Downloads/cuent_servicio_gcp/latam-challenge-devops-26284d5f8744.json"
+  credentials = "/Users/cesartag/Downloads/cuenta_servicio_gcp/latam-challenge-devops-26284d5f8744.json"
 }
 
 
@@ -24,10 +24,10 @@ module "bigquery" {
   region = var.region
 }
 
-/*module "cloudrun" {
+module "cloudrun" {
   source = "./modules/cloudrun"
   image  = var.image
   region = var.region
   project_id = var.project_id
-}*/
+}
 
