@@ -102,50 +102,39 @@ El código fuente está almacenado en GitHub, y GitHub Actions gestiona automát
 **Comentarios:**
 **Los test de integración no necesariamente deben cubrir todos los casos de uso.**
 
-**1. Implementa en el flujo CI/CD un test de integración que verifique que la API efectivamente está exponiendo los datos de la base de datos. Argumenta.**
+### 1. Implementar test de integración en CI/CD para verificar que la API expone datos de la base de datos:
+- **Prueba de integración**: Crear un test automatizado que haga una solicitud `GET` a la API y verifique que los datos obtenidos son correctos y coherentes con los datos de la base de datos.
+- **Argumento**: Esta prueba asegura que la API puede comunicarse correctamente con la base de datos y que los datos se están exponiendo adecuadamente. Un fallo en esta prueba indicaría problemas en la capa de datos o en la lógica de negocio.
 
-En el flujo CI/CD actual, una prueba clave de integración es verificar que la API despliega correctamente los datos almacenados en la base de datos. Esto es fundamental, ya que garantiza que la aplicación está cumpliendo su propósito principal: servir datos de forma accesible y correcta.
+### 2. Proponer otras pruebas de integración:
+- **Prueba de autenticación**: Verificar que los usuarios autenticados pueden acceder a los endpoints protegidos y que los usuarios no autenticados reciben respuestas de error adecuadas (p. ej., 401).
+  - **Implementación**: Realizar una solicitud autenticada (con token válido) y una no autenticada, verificando las respuestas.
+  
+- **Prueba de inserción de datos**: Verificar que la API permite realizar inserciones en la base de datos correctamente.
+  - **Implementación**: Realizar un `POST` con datos válidos y verificar que estos se almacenan correctamente.
 
-Implementación de prueba de integración:
+- **Prueba de consistencia de datos**: Tras realizar una operación (e.g., `DELETE`), verificar que la base de datos refleja el cambio esperado.
+  - **Implementación**: Eliminar un dato y luego hacer un `GET` para asegurar que el dato ya no está disponible.
 
-La prueba debería consistir en ejecutar solicitudes a los endpoints de la API después de desplegar la aplicación en un entorno temporal o de desarrollo.
-Se puede usar herramientas como pytest o Postman junto con newman para automatizar las pruebas de API.
-El flujo CI/CD se puede integrar con servicios de testing como pytest ejecutando un script que haga peticiones HTTP GET y verifique las respuestas contra datos conocidos en la base de datos.
+### 3. Identificar posibles puntos críticos del sistema y cómo testearlos o medirlos:
+- **Latencia de la API**: Un aumento en la latencia puede indicar problemas de rendimiento en el backend o en la base de datos.
+  - **Cómo medirlo**: Usar herramientas como `Locust` para realizar pruebas de carga y medir la latencia de las respuestas bajo diferentes niveles de tráfico.
 
-**2. Proponer otras pruebas de integración que validen que el sistema está funcionando correctamente y cómo se implementarían.**
+- **Fallo en servicios externos (e.g., almacenamiento en Google Cloud)**: Dependencias de servicios externos pueden causar fallos o tiempos de espera elevados.
+  - **Cómo medirlo**: Simular fallos en los servicios externos (e.g., Google Cloud Storage) usando `mocking` para verificar cómo responde el sistema.
 
-Además de la prueba de exposición de datos de la API, otras pruebas de integración podrían incluir:
+- **Escalabilidad bajo alta carga**: A medida que el tráfico aumenta, el sistema puede volverse inestable si no está configurado para escalar adecuadamente.
+  - **Cómo medirlo**: Usar pruebas de estrés para aumentar gradualmente el tráfico y observar en qué punto la API comienza a fallar o degradar su rendimiento.
 
-Prueba de autenticación y autorización: Verificar que el sistema de autenticación y los permisos de acceso a la API están funcionando correctamente. Esto podría incluir pruebas para asegurarse de que los usuarios no autenticados no puedan acceder a datos protegidos.
+### 4. Proponer cómo robustecer técnicamente el sistema:
+- **Implementación de caché**: Utilizar un sistema de caché (como Redis) para almacenar respuestas de las API más solicitadas, reduciendo la carga en la base de datos.
+  
+- **Autoescalado**: Configurar autoescalado en la infraestructura de la API (Cloud Run o Kubernetes) para manejar aumentos de tráfico de forma automática, evitando saturaciones.
 
-Prueba de inserción de datos: Asegurarse de que la API permite realizar inserciones en la base de datos de manera correcta. 
+- **Monitoreo proactivo**: Implementar monitoreo con Prometheus para rastrear métricas clave (latencia, errores, uso de recursos) y configurar alertas para que el equipo sea notificado antes de que se afecte la disponibilidad.
 
-Prueba de consistencia de la base de datos: Validar que, después de realizar operaciones en la API (como POST, PUT o DELETE), la base de datos mantiene la consistencia de los datos. Esto implica realizar una operación y luego verificar que la base de datos refleja el cambio esperado.
+- **Uso de patrones de resiliencia**: Aplicar patrones como "circuit breaker" para manejar fallos en servicios externos, evitando que un fallo en un servicio crítico afecte a toda la aplicación.
 
-**3. Identificar posibles puntos críticos del sistema (a nivel de fallo o performance) diferentes al punto anterior y proponer formas de testearlos o medirlos.**
-
-Algunos puntos críticos que podrían ser un problema en el sistema:
-
-Latencia y rendimiento de la API: En producción, la API podría experimentar problemas de rendimiento debido a la carga o la complejidad de las consultas a la base de datos.
-
-Cómo medirlo: Utilizar herramientas como Locust o Apache JMeter para realizar pruebas de carga y medir la latencia de las respuestas. De esta manera, podrías simular múltiples usuarios accediendo a la API y medir cómo afecta el rendimiento.
-Test de estrés: Medir cómo se comporta el sistema bajo una carga extrema y observar en qué punto la API empieza a fallar o degradar su rendimiento.
-Escalabilidad del servicio: Dependiendo de la cantidad de datos o tráfico, la escalabilidad de la API puede convertirse en un problema.
-
-Cómo medirlo: Simular un aumento progresivo de tráfico utilizando herramientas de pruebas de carga. Observar en qué momento los tiempos de respuesta se vuelven inaceptables o cuándo comienzan a ocurrir fallos.
-Errores en la interacción con servicios externos (e.g., Google Cloud Storage): Si el sistema depende de servicios externos como Google Cloud, los errores en la conectividad o problemas de red pueden causar fallos en la aplicación.
-
-Cómo medirlo: Implementar pruebas que simulen fallos en la conexión con servicios externos. Usar mocking en las pruebas para simular respuestas de error del servicio de Google Cloud y observar cómo responde la aplicación.
-
-**4. Proponer cómo robustecer técnicamente el sistema para compensar o solucionar dichos puntos críticos.**
-
-Uso de caché: Para reducir la carga en la base de datos y mejorar la latencia, podrías implementar un sistema de caché (como Redis o Memcached) para almacenar temporalmente las respuestas de la API más solicitadas.
-
-Autoescalado: Configurar el autoescalado en Google Cloud Run o Kubernetes (si el sistema lo permite) para garantizar que la API puede manejar incrementos en la carga. Esto ayudaría a prevenir tiempos de inactividad en momentos de alto tráfico.
-
-Monitoreo y alertas: Implementar un sistema de monitoreo (como Prometheus + Grafana o Stackdriver) que te permita observar métricas clave del rendimiento de la API (tiempos de respuesta, uso de CPU, uso de memoria) y configurar alertas para detectar problemas antes de que afecten a los usuarios.
-
-Implementación de Circuit Breaker: En caso de dependencias con servicios externos, un patrón de "circuit breaker" puede ayudar a que la API degrade su servicio de manera controlada en lugar de fallar completamente cuando un servicio externo no esté disponible.
 
 **Parte 4: Métricas y Monitoreo**
 1. Proponer 3 métricas (además de las básicas CPU/RAM/DISK USAGE) críticas para entender la salud y rendimiento del sistema end-to-end
@@ -153,6 +142,37 @@ Implementación de Circuit Breaker: En caso de dependencias con servicios extern
 3. Describe a grandes rasgos cómo sería la implementación de esta herramienta en la nube y cómo esta recolectaría las métricas del sistema
 4. Describe cómo cambiará la visualización si escalamos la solución a 50 sistemas similares y qué otras métricas o formas de visualización nos permite desbloquear este escalamiento.
 5. Comenta qué dificultades o limitaciones podrían surgir a nivel de observabilidad de los sistemas de no abordarse correctamente el problema de escalabilidad
+
+### 1. Proponer 3 métricas críticas (además de las básicas CPU/RAM/DISK USAGE) para entender la salud y rendimiento del sistema end-to-end:
+- **Latencia de respuesta de la API**: Indica el tiempo que tarda la API en procesar una solicitud y devolver una respuesta. Valores elevados pueden revelar cuellos de botella en el sistema.
+- **Errores de API (5xx, 4xx)**: Un aumento en estos errores puede reflejar problemas con la aplicación o con servicios externos.
+- **Tasa de solicitudes por segundo (RPS)**: Mide la cantidad de solicitudes que el sistema está manejando por segundo, ayudando a evaluar la carga y capacidad de respuesta.
+
+### 2. Proponer una herramienta de visualización y describir qué métricas mostraría:
+- **Herramienta**: Grafana + Prometheus.
+- **Métricas a mostrar**:
+  - Latencia de la API en tiempo real.
+  - Tasa de errores (5xx y 4xx) por endpoint.
+  - Tasa de solicitudes por segundo (RPS) agregada y por endpoint.
+- **Interpretación**: La combinación de estas métricas permite identificar rápidamente problemas de rendimiento (latencia alta), sobrecarga (elevada tasa de RPS), y fallos sistémicos (errores 5xx) que requieren intervención.
+
+### 3. Descripción de la implementación en la nube:
+- **Infraestructura**: Prometheus recolectaría métricas de los servicios usando endpoints de monitoreo (e.g., `/metrics` en la API) o integraciones nativas en GCP. Grafana se utilizaría para visualizar y crear dashboards personalizados con las métricas recolectadas.
+- **Recolección de métricas**: Prometheus haría scrapes periódicos de las aplicaciones, contenedores, y bases de datos, recolectando datos sobre rendimiento y salud del sistema.
+
+### 4. Cambio en la visualización al escalar a 50 sistemas similares:
+- **Nuevas visualizaciones**: Al escalar a 50 sistemas, agregaríamos gráficos agregados y desglosados por sistema. También incluiríamos:
+  - Promedios y percentiles de latencia.
+  - Comparativa de errores por sistema.
+  - Heatmaps de utilización de recursos entre los diferentes sistemas.
+- **Desbloqueo**: Se podrían habilitar alertas basadas en anomalías detectadas al comparar el rendimiento de múltiples sistemas, facilitando una identificación rápida de outliers.
+
+### 5. Dificultades o limitaciones en la observabilidad si no se aborda correctamente la escalabilidad:
+- **Limitaciones**:
+  - **Sobrecarga en la recolección de métricas**: Con 50 sistemas, Prometheus podría experimentar dificultades para mantener los tiempos de scraping o almacenar grandes volúmenes de datos.
+  - **Alertas ruidosas**: Un mal diseño del sistema de alertas puede generar alertas falsas o innecesarias, dificultando la identificación de problemas reales.
+  - **Cuellos de botella en la infraestructura**: Al no gestionar correctamente la escalabilidad de los sistemas de observabilidad, se puede introducir un cuello de botella en el propio sistema de monitoreo, impidiendo su correcto funcionamiento en entornos distribuidos y de gran escala.
+
 
 **Comentarios:**
 **No se requiere implementación**
@@ -162,5 +182,35 @@ Implementación de Circuit Breaker: En caso de dependencias con servicios extern
 2. Define métricas SLIs para los servicios del sistema y un SLO para cada uno de los SLIs. Argumenta por qué escogiste esos SLIs/SLOs y por qué desechaste otras métricas para utilizarlas dentro de la definición de SLIs.
 **Comentarios:**
 **No se requiere implementación**
+   
+### 1. Reglas o umbrales para disparar alertas al decaer la performance del sistema:
+- **Latencia de respuesta de la API**:
+  - **Umbral de alerta crítica**: Si la latencia media supera los 500 ms en 95% de las solicitudes en un intervalo de 5 minutos.
+  - **Justificación**: La latencia alta afecta directamente la experiencia del usuario y puede indicar problemas de rendimiento o sobrecarga en la infraestructura.
+  
+- **Errores de API (5xx, 4xx)**:
+  - **Umbral de alerta crítica**: Si la tasa de errores 5xx supera el 2% de las solicitudes totales en 1 minuto.
+  - **Alerta de advertencia**: Si la tasa de errores 4xx supera el 5% durante un período de 5 minutos.
+  - **Justificación**: Un aumento en errores 5xx refleja fallos graves en el backend, mientras que los 4xx indican problemas con solicitudes de los usuarios o mal uso del API.
+
+- **Tasa de solicitudes por segundo (RPS)**:
+  - **Umbral de alerta**: Si el RPS aumenta más del 20% en un intervalo de 1 minuto en comparación con el promedio de las últimas 24 horas.
+  - **Justificación**: Un aumento brusco en el RPS puede saturar el sistema y causar fallos si no se escala adecuadamente.
+
+### 2. Definir métricas SLIs y SLOs:
+- **SLI (Latencia de la API)**: Tiempo promedio de respuesta de la API en solicitudes exitosas (p95).
+  - **SLO**: El 95% de las solicitudes deben tener una latencia inferior a 300 ms durante un período de 30 días.
+  - **Justificación**: La latencia es una métrica crítica que afecta directamente la experiencia del usuario. Se seleccionó el percentil 95 para capturar los peores casos, descartando el percentil 100 para evitar outliers extremos que puedan distorsionar el análisis.
+
+- **SLI (Tasa de errores 5xx)**: Porcentaje de respuestas con código 5xx sobre el total de solicitudes.
+  - **SLO**: Mantener la tasa de errores 5xx por debajo del 1% en un período de 30 días.
+  - **Justificación**: Los errores 5xx son indicativos de problemas en el servidor y afectan seriamente la disponibilidad del servicio. Se excluyeron los errores 4xx, ya que no son fallos del sistema, sino de las solicitudes del usuario.
+
+- **SLI (Disponibilidad del servicio)**: Porcentaje de tiempo que el servicio está disponible y responde correctamente (sin fallos 5xx).
+  - **SLO**: Mantener una disponibilidad del 99.9% en un período mensual.
+  - **Justificación**: La disponibilidad es una métrica clave para asegurar la fiabilidad del servicio. Se descartaron otras métricas como el uso de recursos (CPU/RAM), ya que estas afectan indirectamente la experiencia del usuario y no son tan críticas para medir la salud general del sistema.
+
+Estas métricas permiten una visión clara y accionable de los problemas de rendimiento y estabilidad del sistema, enfocándose en lo que realmente impacta la experiencia del usuario.
+
 
 
