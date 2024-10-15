@@ -4,6 +4,7 @@ from google.oauth2 import service_account
 
 # Cargar las credenciales de la variable de entorno
 credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+print(f"creds : {credentials_path}")
 
 if credentials_path is None:
     raise EnvironmentError("GOOGLE_APPLICATION_CREDENTIALS environment variable not set")

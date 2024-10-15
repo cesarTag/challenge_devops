@@ -6,6 +6,7 @@ from publisher import publish_message_to_topic
 
 app = Flask(__name__)
 
+
 if __name__ != "__main__":
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
@@ -76,3 +77,4 @@ def publish_message():
 if __name__ == "__main__":
     # Flask se ejecuta solo en modo de desarrollo
     app.run(host='0.0.0.0', port=8080, debug=True)
+    app.logger.info("API iniciada!!!")
