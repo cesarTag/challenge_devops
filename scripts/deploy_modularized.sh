@@ -75,8 +75,8 @@ handle_repository() {
 # Función para construir y subir la imagen Docker
 build_and_push_docker_image() {
   IMAGE_NAME="$REGION-docker.pkg.dev/$GCP_PROJECT_ID/$REPOSITORY_NAME/data-api:$ENVIRONMENT"
-  echo "Construyendo la imagen Docker..."
-  docker build -t $IMAGE_NAME ./src
+  echo "Construyendo la imagen Docker... $IMAGE_NAME"
+  docker build --build-arg key="$(cat $GOOGLE_APPLICATION_CREDENTIALS)" -t $IMAGE_NAME ./src
   echo "Subiendo la imagen Docker..."
   gcloud auth configure-docker "$REGION-docker.pkg.dev"
   docker push $IMAGE_NAME
@@ -123,11 +123,10 @@ check_project_root
 validate_environment "$1"
 load_environment_variables
 authenticate_gcp
-#handle_repository
-#build_and_push_docker_image
-#update_tfvars_file
+handle_repository
+build_and_push_docker_image
+update_tfvars_file
 handle_bucket
-echo $GOOGLE_APPLICATION_CREDENTIALS
 run_terraform
 
 echo "Despliegue completado exitosamente."
